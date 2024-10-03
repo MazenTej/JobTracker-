@@ -6,7 +6,7 @@ import {
   Typography,
   Box,
   FormHelperText,
-  CircularProgress, // Import CircularProgress for the spinner
+  CircularProgress, // For loading spinner
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/AuthService";
@@ -14,9 +14,15 @@ import AuthService from "../../services/AuthService";
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState({ email: "", password: "", server: "" });
-  const [loading, setLoading] = useState(false); // Add loading state
-  const navigate = useNavigate();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    server: "",
+  });
+  const [loading, setLoading] = useState(false); // Loading state for spinner
+  const navigate = useNavigate(); // React Router hook for navigation
 
   // Email validation
   const validateEmail = (email) => {
@@ -27,7 +33,8 @@ const Register = () => {
     e.preventDefault();
     let valid = true;
 
-    setError({ email: "", password: "", server: "" });
+    // Reset error state
+    setError({ email: "", password: "", confirmPassword: "", server: "" });
 
     // Validate email
     if (!validateEmail(email)) {
@@ -41,18 +48,35 @@ const Register = () => {
       valid = false;
     }
 
+    // Validate confirm password
+    if (password !== confirmPassword) {
+      setError((prev) => ({
+        ...prev,
+        confirmPassword: "Passwords do not match",
+      }));
+      valid = false;
+    }
+
+    // If the form is valid, attempt to register
     if (valid) {
       try {
-        setLoading(true); // Set loading to true when submitting
+        setLoading(true); // Show loading spinner
         const response = await AuthService.register({ email, password });
-        alert("Registration successful");
 
-        localStorage.setItem("user_id", response.data.user_id);
+        // Check if the status code is 201, which means registration was successful
+        if (response.status === 201) {
+          alert("Registration successful. Please log in.");
 
-        setLoading(false); // Set loading to false after successful registration
-        navigate("/dashboard");
+          // Redirect to the login page
+          navigate("/login");
+        } else {
+          throw new Error("Registration failed");
+        }
+
+        setLoading(false); // Hide spinner
       } catch (error) {
-        setLoading(false); // Set loading to false in case of error
+        setLoading(false); // Hide spinner on error
+        console.error("Registration Error:", error); // Log the error for debugging
         setError((prev) => ({
           ...prev,
           server: error.response?.data?.message || "Registration failed",
@@ -95,11 +119,26 @@ const Register = () => {
             <FormHelperText error>{error.password}</FormHelperText>
           )}
 
+          <TextField
+            label="Confirm Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            error={!!error.confirmPassword}
+            required
+          />
+          {error.confirmPassword && (
+            <FormHelperText error>{error.confirmPassword}</FormHelperText>
+          )}
+
           {error.server && (
             <Typography color="error">{error.server}</Typography>
           )}
 
-          {/* Show loader while registering */}
+          {/* Show loading spinner while registering */}
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <CircularProgress />
