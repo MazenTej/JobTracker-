@@ -6,15 +6,17 @@ import {
   Typography,
   Box,
   FormHelperText,
+  CircularProgress, // Import CircularProgress for the spinner
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/AuthService";
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState({ email: "", password: "", server: "" }); // Add server error state
-  const navigate = useNavigate(); // React Router hook for navigation
+  const [error, setError] = useState({ email: "", password: "", server: "" });
+  const [loading, setLoading] = useState(false); // Add loading state
+  const navigate = useNavigate();
 
   // Email validation
   const validateEmail = (email) => {
@@ -25,7 +27,6 @@ const Login = () => {
     e.preventDefault();
     let valid = true;
 
-    // Reset error state
     setError({ email: "", password: "", server: "" });
 
     // Validate email
@@ -40,19 +41,20 @@ const Login = () => {
       valid = false;
     }
 
-    // If the form is valid, attempt to log in
     if (valid) {
       try {
+        setLoading(true); // Set loading to true when submitting
         const response = await AuthService.login({ email, password });
         alert("Login successful");
 
-        // Store user_id in localStorage for future use (e.g., adding job applications)
         localStorage.setItem("user_id", response.data.user_id);
 
-        // Redirect to dashboard
+        setIsAuthenticated(true);
+
+        setLoading(false); // Set loading to false after successful login
         navigate("/dashboard");
       } catch (error) {
-        // Display server error
+        setLoading(false); // Set loading to false in case of error
         setError((prev) => ({
           ...prev,
           server: error.response?.data?.message || "Login failed",
@@ -95,14 +97,20 @@ const Login = () => {
             <FormHelperText error>{error.password}</FormHelperText>
           )}
 
-          {/* Display server error message */}
           {error.server && (
             <Typography color="error">{error.server}</Typography>
           )}
 
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Login
-          </Button>
+          {/* Show loader while logging in */}
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Button type="submit" variant="contained" color="primary" fullWidth>
+              Login
+            </Button>
+          )}
         </form>
 
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>

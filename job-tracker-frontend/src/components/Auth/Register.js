@@ -6,15 +6,19 @@ import {
   Typography,
   Box,
   FormHelperText,
+  CircularProgress, // Import CircularProgress for the spinner
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/AuthService";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState({ email: "", password: "", server: "" }); // Add server error state
+  const [error, setError] = useState({ email: "", password: "", server: "" });
+  const [loading, setLoading] = useState(false); // Add loading state
+  const navigate = useNavigate();
 
+  // Email validation
   const validateEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
@@ -25,25 +29,30 @@ const Register = () => {
 
     setError({ email: "", password: "", server: "" });
 
+    // Validate email
     if (!validateEmail(email)) {
       setError((prev) => ({ ...prev, email: "Invalid email format" }));
       valid = false;
     }
 
-    if (password.length < 6) {
-      setError((prev) => ({
-        ...prev,
-        password: "Password must be at least 6 characters",
-      }));
+    // Validate password
+    if (password.length === 0) {
+      setError((prev) => ({ ...prev, password: "Password cannot be empty" }));
       valid = false;
     }
 
     if (valid) {
       try {
-        await AuthService.register({ email, password });
+        setLoading(true); // Set loading to true when submitting
+        const response = await AuthService.register({ email, password });
         alert("Registration successful");
+
+        localStorage.setItem("user_id", response.data.user_id);
+
+        setLoading(false); // Set loading to false after successful registration
+        navigate("/dashboard");
       } catch (error) {
-        // Display server error
+        setLoading(false); // Set loading to false in case of error
         setError((prev) => ({
           ...prev,
           server: error.response?.data?.message || "Registration failed",
@@ -86,17 +95,24 @@ const Register = () => {
             <FormHelperText error>{error.password}</FormHelperText>
           )}
 
-          {/* Display server error message */}
           {error.server && (
             <Typography color="error">{error.server}</Typography>
           )}
 
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Register
-          </Button>
+          {/* Show loader while registering */}
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Button type="submit" variant="contained" color="primary" fullWidth>
+              Register
+            </Button>
+          )}
         </form>
+
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-          Already have an account? <Link to="/login">Login here</Link>.
+          Already have an account? <a href="/login">Login here</a>.
         </Typography>
       </Box>
     </Container>
