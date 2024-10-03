@@ -51,6 +51,17 @@ const AddApplication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if any status in the timeline is not selected
+    const hasEmptyStatus = application.statusTimeline.some(
+      (entry) => !entry.status
+    );
+
+    if (hasEmptyStatus) {
+      setErrorMessage("Please select a status for each timeline entry.");
+      return;
+    }
+
     try {
       const user_id = localStorage.getItem("user_id");
       const newApplication = { ...application, user_id };

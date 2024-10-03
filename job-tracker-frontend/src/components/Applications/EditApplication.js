@@ -70,6 +70,17 @@ const EditApplication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if any status in the timeline is not selected
+    const hasEmptyStatus = application.statusTimeline.some(
+      (entry) => !entry.status
+    );
+
+    if (hasEmptyStatus) {
+      setErrorMessage("Please select a status for each timeline entry.");
+      return;
+    }
+
     try {
       await AuthService.updateApplication(applicationId, application);
       alert("Application updated successfully");
@@ -81,7 +92,6 @@ const EditApplication = () => {
       setErrorMessage(message);
     }
   };
-
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 5 }}>
