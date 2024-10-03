@@ -98,7 +98,6 @@ const Dashboard = () => {
   const handleLogout = () => {
     // Clear localStorage (remove any stored tokens or user data)
     localStorage.removeItem("user_id");
-    localStorage.removeItem("auth_token"); // Assuming you store an auth token
     // Redirect to login page
     navigate("/login");
   };

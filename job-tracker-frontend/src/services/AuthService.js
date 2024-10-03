@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000"; // Replace with your actual backend URL
+const API_URL = "https://job-tracker-backend-1-050e17530006.herokuapp.com/"; // Replace with your actual backend URL
 
 // Register new user
 const register = (data) => {
